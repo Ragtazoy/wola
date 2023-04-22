@@ -75,7 +75,7 @@ const Navbar = () => {
 
       <Col flex={"auto"}>
         <Row justify={"end"}>
-          <Popover content={<Cart />} placement="bottomLeft" title="ตะกร้าสินค้า">
+          <Popover content={<Cart />} placement="bottomRight" title="ตะกร้าสินค้า">
             <Button
               type="primary"
               icon={<ShoppingCartOutlined />}

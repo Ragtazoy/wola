@@ -1,24 +1,51 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Image, Row, Col, Space, Card, Button } from "antd";
+import { makeRequest } from "../../makeRequest";
 
 import banner from "../../assets/banner.png";
 import feature1 from "../../assets/featues1.jpg";
 import feature2 from "../../assets/featues2.jpg";
 import feature3 from "../../assets/featues3.jpg";
-import banana from "../../assets/banana.jpg";
-import watermelon from "../../assets/watermelon.jpg";
 import noImage from "../../assets/no-image.png";
+import { useDispatch } from "react-redux";
+import { addItem } from "../../redux/cartReducer";
 
 const { Meta } = Card;
-const products = [
-  { id: 1, name: "banana", price: 50, image: banana },
-  { id: 2, name: "watermelon", price: 50, image: watermelon },
-  { id: 3, name: "fruit", price: 50, image: banana },
-  { id: 4, name: "fruit", price: 50, image: banana },
-  { id: 5, name: "fruit", price: 50, image: banana },
-];
 
 const Home = () => {
+  const [productFruits, setProductFruits] = useState([]);
+  const [productJuices, setProductJuices] = useState([]);
+  const [quantity] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      await makeRequest
+        .get("/products?populate=*")
+        .then((res) => {
+          console.log("setData", res.data.data);
+          const fruits = res.data.data.filter(
+            (i) => i.attributes.category === "fruit"
+          );
+          const juices = res.data.data.filter(
+            (i) => i.attributes.category === "juice"
+          );
+          setProductFruits(fruits);
+          setProductJuices(juices);
+        })
+        .catch((err) => {
+          console.log("err /products:", err);
+          setError(true);
+        });
+      setLoading(false);
+    };
+    fetchData();
+  }, []);
+
   return (
     <div style={{ backgroundColor: "#f7fafc" }}>
       {/* Banner ================================= */}
@@ -45,7 +72,7 @@ const Home = () => {
             สินค้าเพื่อคุณ
           </h1>
 
-          <a href="#product" class="btn">
+          <a href="#product" className="btn">
             ช็อปเลย
           </a>
         </div>
@@ -56,12 +83,12 @@ const Home = () => {
         <h1 style={{ color: "#1890ff", textAlign: "center" }}>
           3 ขั้นตอนง่ายๆ
         </h1>
-        <Row gutter={[20,20]} justify={'center'}>
+        <Row gutter={[20, 20]} justify={"center"}>
           <Col>
             <Card
               bordered={false}
               cover={
-                <img width={100} height={300} alt="feature" src={feature1} />
+                <img width={250} height={250} alt="feature" src={feature1} />
               }
             >
               <h3 style={{ textAlign: "center" }}>สินค้า สดใหม่ และ ออแกนิค</h3>
@@ -72,7 +99,7 @@ const Home = () => {
             <Card
               bordered={false}
               cover={
-                <img width={100} height={300} alt="feature" src={feature2} />
+                <img width={250} height={250} alt="feature" src={feature2} />
               }
             >
               <h3 style={{ textAlign: "center" }}>มีบริการขนส่ง</h3>
@@ -83,7 +110,7 @@ const Home = () => {
             <Card
               bordered={false}
               cover={
-                <img width={100} height={300} alt="feature" src={feature3} />
+                <img width={250} height={250} alt="feature" src={feature3} />
               }
             >
               <h3 style={{ textAlign: "center" }}>จ่ายเงินง่าย ๆ</h3>
@@ -104,28 +131,49 @@ const Home = () => {
             wrap
             style={{ display: "flex", justifyContent: "center" }}
           >
-            {products.map((item) => (
-              <Card
-                onClick={() => {
-                  console.log("hello cards");
-                }}
-                hoverable
-                bordered={false}
-                style={{ width: 210, height: 300 }}
-                cover={<img height={160} alt="product" src={item.image} />}
-              >
-                <Meta
-                  style={{ textAlign: "center" }}
-                  title={item.name}
-                  description={item.price + " บาท"}
-                />
-                <Row justify={"center"} style={{ padding: 10 }}>
-                  <Button type="primary" size={"middle"}>
-                    เพิ่มในตะกร้า
-                  </Button>
-                </Row>
-              </Card>
-            ))}
+            {error
+              ? "Something went wrong!"
+              : loading
+              ? "loading..."
+              : productFruits.map((item) => (
+                  <Card
+                    onClick={() =>
+                      dispatch(
+                        addItem({
+                          id: item.id,
+                          product_name: item.attributes.product_name,
+                          price: item.attributes.price,
+                          image: item.attributes.image.data.attributes.url,
+                          quantity,
+                        })
+                      )
+                    }
+                    hoverable
+                    bordered={false}
+                    style={{ width: 210, height: 300 }}
+                    cover={
+                      <img
+                        height={160}
+                        alt="productFruits"
+                        src={
+                          process.env.REACT_APP_UPLOAD_URL +
+                          item.attributes.image.data.attributes.url
+                        }
+                      />
+                    }
+                  >
+                    <Meta
+                      style={{ textAlign: "center" }}
+                      title={item.attributes.product_name}
+                      description={item.attributes.price + " บาท"}
+                    />
+                    <Row justify={"center"} style={{ padding: 10 }}>
+                      <Button type="primary" size={"middle"}>
+                        เพิ่มในตะกร้า
+                      </Button>
+                    </Row>
+                  </Card>
+                ))}
           </Space>
         </Row>
       </div>
@@ -140,28 +188,41 @@ const Home = () => {
             wrap
             style={{ display: "flex", justifyContent: "center" }}
           >
-            {products.map((item) => (
-              <Card
-                onClick={() => {
-                  console.log("hello cards");
-                }}
-                hoverable
-                bordered={false}
-                style={{ width: 210, height: 300 }}
-                cover={<img height={160} alt="product" src={item.image} />}
-              >
-                <Meta
-                  style={{ textAlign: "center" }}
-                  title={item.name}
-                  description={item.price + " บาท"}
-                />
-                <Row justify={"center"} style={{ padding: 10 }}>
-                  <Button type="primary" size={"middle"}>
-                    เพิ่มในตะกร้า
-                  </Button>
-                </Row>
-              </Card>
-            ))}
+            {error
+              ? "Something went wrong!"
+              : loading
+              ? "loading..."
+              : productJuices.map((item) => (
+                  <Card
+                    onClick={() => {
+                      console.log("hello cards");
+                    }}
+                    hoverable
+                    bordered={false}
+                    style={{ width: 210, height: 300 }}
+                    cover={
+                      <img
+                        height={160}
+                        alt="productJuices"
+                        src={
+                          process.env.REACT_APP_UPLOAD_URL +
+                          item.attributes.image.data.attributes.url
+                        }
+                      />
+                    }
+                  >
+                    <Meta
+                      style={{ textAlign: "center" }}
+                      title={item?.attributes.product_name}
+                      description={item.attributes.price + " บาท"}
+                    />
+                    <Row justify={"center"} style={{ padding: 10 }}>
+                      <Button type="primary" size={"middle"}>
+                        เพิ่มในตะกร้า
+                      </Button>
+                    </Row>
+                  </Card>
+                ))}
           </Space>
         </Row>
       </div>
