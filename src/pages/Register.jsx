@@ -2,23 +2,19 @@ import React, { useState } from "react";
 import { Button, Checkbox, Form, Input, Row, Card, Image } from "antd";
 import { Link } from "react-router-dom";
 import { makeRequest } from "../makeRequest";
-import { useDispatch } from "react-redux";
 
 import { ShoppingTwoTone } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import background from "../assets/background.jpg";
 
-const Login = () => {
+const Register = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const [error, setError] = useState();
 
-  const onFinish = async (values) => {
-    const loginData = await handleLogin(values);
-    if (loginData !== null) {
-      console.log("handleLogin Success:", loginData);
-      await dispatch({ type: "addAuth", payload: loginData });
-      navigate("/");
+  const onFinish = (values) => {
+    if (handleLogin()) {
+      console.log("handleLogin Success:", values);
+      // navigate("/login", { state: { userId: 1, role: "customer" } });
     } else {
       console.log("handleLogin Failed");
     }
@@ -28,21 +24,25 @@ const Login = () => {
     console.log("Failed:", errorInfo);
   };
 
-  const handleLogin = (values) => {
-    return makeRequest
+  const handleLogin = async () => {
+    await makeRequest
       .post("/auth/local", {
-        identifier: values.username,
-        password: values.password,
+        identifier: "user1",
+        password: "123456",
       })
       .then((response) => {
-        console.log("Login success:", response.data);
+        // Handle success.
+        console.log("Well done!");
+        console.log("User profile", response.data.user);
+        console.log("User token", response.data.jwt);
         setError();
-        return response.data;
+        return true;
       })
       .catch((error) => {
+        // Handle error.
         console.log("An error occurred:", error.response);
         setError("ข้อมูลไม่ถูกต้อง");
-        return null;
+        return false;
       });
   };
 
@@ -100,6 +100,14 @@ const Login = () => {
             </Form.Item>
 
             <Form.Item
+              label="Email"
+              name="email"
+              rules={[{ required: true, message: "Please input your email!" }]}
+            >
+              <Input type="email" />
+            </Form.Item>
+
+            <Form.Item
               label="Password"
               name="password"
               rules={[
@@ -109,14 +117,6 @@ const Login = () => {
               <Input.Password />
             </Form.Item>
 
-            <Form.Item
-              name="remember"
-              valuePropName="checked"
-              wrapperCol={{ offset: 8, span: 12 }}
-            >
-              <Checkbox>Remember me</Checkbox>
-            </Form.Item>
-
             <Form.Item wrapperCol={{ span: 24 }}>
               {error ? (
                 <span style={{ color: "#ff4d4f", marginBottom: 2 }}>
@@ -124,12 +124,12 @@ const Login = () => {
                 </span>
               ) : null}
               <Button type="primary" htmlType="submit" block>
-                Login
+                Register
               </Button>
             </Form.Item>
           </Form>
           <span>
-            ยังไม่มีบัญชี?<Link to={"/register"}> สมัครสมาชิก</Link>
+            ยังไม่มีบัญชี?<Link to={"/login"}> สมัครสมาชิก</Link>
           </span>
         </Card>
       </div>
@@ -137,4 +137,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Register;

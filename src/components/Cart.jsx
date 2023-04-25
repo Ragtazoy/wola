@@ -1,12 +1,15 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+
 import { List, Button, Row } from "antd";
-import { DeleteOutlined } from "@ant-design/icons";
-import { removeItem } from "../redux/cartReducer";
+import { DeleteOutlined, LoginOutlined } from "@ant-design/icons";
 
 const Cart = () => {
-  const selectedProducts = useSelector((state) => state.cart.products);
-
+  const auth = useSelector((state) => state.auth[0]);
+  const selectedProducts = useSelector((state) => state.cart);
+  console.log("selectedProducts:", selectedProducts);
+  const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const totalPrice = () => {
@@ -15,12 +18,6 @@ const Cart = () => {
       total += item.quantity * item.price;
     });
     return total.toString();
-  };
-
-  const order = () => {
-    if (selectedProducts.length > 0) {
-      console.log(selectedProducts);
-    }
   };
 
   return (
@@ -40,7 +37,7 @@ const Cart = () => {
                 icon={<DeleteOutlined />}
                 size={"small"}
                 onClick={() => {
-                  dispatch(removeItem(item.id));
+                  dispatch({ type: "removeItem", payload: item.id });
                 }}
               />
             }
@@ -69,9 +66,19 @@ const Cart = () => {
               <span>ราคารวม</span>
               <span>{totalPrice()} บาท</span>
             </Row>
-            {selectedProducts.length > 0 ? (
+            {!auth ? (
               <Button
-                onClick={() => order()}
+                onClick={() => navigate("/login")}
+                type="primary"
+                block
+                icon={<LoginOutlined />}
+                size={"middle"}
+              >
+                เข้าสู่ระบบ
+              </Button>
+            ) : selectedProducts.length > 0 ? (
+              <Button
+                onClick={() => navigate("/order")}
                 type="primary"
                 block
                 size={"middle"}

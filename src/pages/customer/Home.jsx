@@ -1,21 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { Image, Row, Col, Space, Card, Button } from "antd";
 import { makeRequest } from "../../makeRequest";
+import { useDispatch } from "react-redux";
 
+import { Image, Row, Col, Space, Card, Button } from "antd";
 import banner from "../../assets/banner.png";
 import feature1 from "../../assets/featues1.jpg";
 import feature2 from "../../assets/featues2.jpg";
 import feature3 from "../../assets/featues3.jpg";
 import noImage from "../../assets/no-image.png";
-import { useDispatch } from "react-redux";
-import { addItem } from "../../redux/cartReducer";
 
 const { Meta } = Card;
 
 const Home = () => {
   const [productFruits, setProductFruits] = useState([]);
   const [productJuices, setProductJuices] = useState([]);
-  const [quantity] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
@@ -137,17 +135,19 @@ const Home = () => {
               ? "loading..."
               : productFruits.map((item) => (
                   <Card
-                    onClick={() =>
-                      dispatch(
-                        addItem({
+                    key={item.id}
+                    onClick={async () => {
+                      await dispatch({
+                        type: "addItem",
+                        payload: {
                           id: item.id,
                           product_name: item.attributes.product_name,
                           price: item.attributes.price,
                           image: item.attributes.image.data.attributes.url,
-                          quantity,
-                        })
-                      )
-                    }
+                          quantity: 1,
+                        },
+                      });
+                    }}
                     hoverable
                     bordered={false}
                     style={{ width: 210, height: 300 }}
@@ -194,6 +194,7 @@ const Home = () => {
               ? "loading..."
               : productJuices.map((item) => (
                   <Card
+                    key={item.id}
                     onClick={() => {
                       console.log("hello cards");
                     }}
