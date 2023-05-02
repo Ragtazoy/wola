@@ -1,46 +1,90 @@
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { useSelector } from "react-redux";
+import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { makeRequest } from "../../makeRequest";
 
-import { Button, Card, Form, Input, Row } from "antd";
-import { ShoppingTwoTone } from "@ant-design/icons";
+import { Button, Card, Col, Form, Input, Row, message } from "antd";
 
 const Profile = () => {
   const auth = useSelector((state) => state.auth[0]);
-  const [data, setData] = useState();
-  const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch();
+  const [messageApi, contextHolder] = message.useMessage();
   const [error, setError] = useState(false);
   const [isChange, setIsChange] = useState(false);
-  console.log(auth?.jwt);
-
-  useEffect(() => {
-    async function fetchData() {
-      setLoading(true);
-      await makeRequest
-        .get("/posts", {
-          headers: {
-            Authorization: `Bearer ${auth?.jwt}`,
-          },
-        })
-        .then((res) => {
-          console.log("setData", res.data);
-        })
-        .catch((err) => {
-          console.log("err /products:", err);
-          setError(true);
-        });
-      setLoading(true);
-    }
-    fetchData();
-  }, [data]);
+  console.log("auth:", auth);
 
   const onFinish = (values) => {
-    console.log("handleLogin", values);
+    if (isChange) {
+      if (values.newPassword === values.confirmPassword) {
+        handleUpdateProfile(values);
+        handleChangePassword(values);
+      } else {
+        messageApi.open({
+          type: "warning",
+          content: `"รหัสผ่านใหม่" และ "ยืนยันรหัสผ่านใหม่" ไม่ตรงกัน`,
+        });
+      }
+    } else {
+      handleUpdateProfile(values);
+    }
   };
 
   const onFinishFailed = (errorInfo) => {
     console.log("Failed:", errorInfo);
+  };
+
+  const handleUpdateProfile = async (values) => {
+    console.log("handleUpdateProfile");
+    await makeRequest
+      .put(`/users/${auth?.user.id}`, {
+        username: values.username,
+        fname: values.fname,
+        lname: values.lname,
+        email: values.email,
+        phone: values.phone,
+        address: values.address,
+        postcode: values.postcode,
+      })
+      .then((res) => {
+        console.log("UpdateProfile success", res.data);
+        dispatch({ type: "updateAuth", payload: res.data });
+        messageApi.open({
+          type: "success",
+          content: "บันทึกข้อมูลส่วนตัวสำเร็จ",
+        });
+      })
+      .catch((err) => {
+        console.log("err UpdateProfile:", err);
+        messageApi.open({
+          type: "error",
+          content: "บันทึกข้อมูลส่วนตัวไม่สำเร็จ",
+        });
+      });
+  };
+
+  const handleChangePassword = async (values) => {
+    console.log("handleChangePassword");
+    await makeRequest
+      .post(
+        "/auth/change-password",
+        {
+          currentPassword: values.password,
+          password: values.newPassword,
+          passwordConfirmation: values.confirmPassword,
+        },
+        {
+          headers: { Authorization: `Bearer ${auth?.jwt}` },
+        }
+      )
+      .then((res) => {
+        console.log("ChangePassword success", res.data);
+      })
+      .catch((err) => {
+        console.log("err ChangePassword:", err);
+        messageApi.open({
+          type: "error",
+          content: "รหัสผ่านไม่ถูกต้อง",
+        });
+      });
   };
 
   return (
@@ -55,59 +99,153 @@ const Profile = () => {
         backgroundColor: "#f7fafc",
       }}
     >
-      <h1 style={{ alignSelf: "start" }}>รายการสินค้า</h1>
-      <Card
-        style={{ width: "100%", display: "flex", justifyContent: "center" }}
-        bordered={false}
-      >
-        <Row justify={"center"} align={"middle"}>
-          <ShoppingTwoTone type="primary" style={{ fontSize: 60 }} />
-          <p style={{ lineHeight: 0, fontSize: 60, color: "#1890ff" }}>WOLA</p>
-        </Row>
-
+      {contextHolder}
+      <h1 style={{ alignSelf: "start" }}>ข้อมูลส่วนตัว</h1>
+      <Card style={{ width: "100%", paddingInline: 50 }} bordered={false}>
         <Form
           name="login"
-          labelCol={{ span: 8 }}
-          wrapperCol={{ span: 16 }}
-          style={{ minWidth: 400, maxWidth: 600 }}
+          layout="vertical"
           onFinish={onFinish}
           onFinishFailed={onFinishFailed}
           autoComplete="off"
         >
-          <Form.Item
-            label="ชื่อผู้ใช้"
-            name="username"
-            initialValue={auth?.user.username}
-            rules={[{ required: true, message: "Please input your username!" }]}
-          >
-            <Input />
-          </Form.Item>
-
-          <Form.Item
-            label="อีเมล"
-            name="email"
-            initialValue={auth?.user.email}
-            rules={[{ required: true, message: "Please input your email!" }]}
-          >
-            <Input type="email" />
-          </Form.Item>
-
-          {!isChange ? null : (
-            <>
-              <Form.Item label="รหัสผ่าน" name="password">
-                <Input.Password />
+          <Row gutter={50} justify={"center"} align={"top"}>
+            <Col flex={0.5}>
+              <Form.Item
+                label="ชื่อผู้ใช้"
+                name="username"
+                initialValue={auth?.user.username}
+                rules={[
+                  { required: true, message: "Please input your username!" },
+                ]}
+              >
+                <Input />
               </Form.Item>
 
-              <Form.Item label="รหัสผ่านใหม่" name="newPassword">
-                <Input.Password />
+              <Form.Item
+                label="อีเมล"
+                name="email"
+                initialValue={auth?.user.email}
+              >
+                <Input
+                  type="email"
+                  disabled
+                  style={{ color: "rgba(0,0,0,0.8)" }}
+                />
               </Form.Item>
-              <Form.Item label="ยืนยันรหัสผ่านใหม่" name="confirmPassword">
-                <Input.Password />
-              </Form.Item>
-            </>
-          )}
 
-          <Form.Item wrapperCol={{ span: 24 }}>
+              {!isChange ? null : (
+                <>
+                  <Form.Item
+                    label="รหัสผ่าน"
+                    name="password"
+                    rules={[
+                      {
+                        required: isChange,
+                        message: "Please input your password!",
+                      },
+                    ]}
+                  >
+                    <Input.Password />
+                  </Form.Item>
+
+                  <Form.Item
+                    label="รหัสผ่านใหม่"
+                    name="newPassword"
+                    rules={[
+                      {
+                        required: isChange,
+                        message: "Please input your new password!",
+                      },
+                    ]}
+                  >
+                    <Input.Password />
+                  </Form.Item>
+
+                  <Form.Item
+                    label="ยืนยันรหัสผ่านใหม่"
+                    name="confirmPassword"
+                    rules={[
+                      {
+                        required: isChange,
+                        message: "Please input your confirm new password!",
+                      },
+                    ]}
+                  >
+                    <Input.Password />
+                  </Form.Item>
+                </>
+              )}
+            </Col>
+
+            <Col flex={0.5}>
+              <Form.Item
+                label="ชื่อจริง"
+                name="fname"
+                initialValue={auth?.user.fname}
+                rules={[
+                  {
+                    required: true,
+                    message: "Please input your firstname!",
+                  },
+                ]}
+              >
+                <Input />
+              </Form.Item>
+
+              <Form.Item
+                label="นามสกุล"
+                name="lname"
+                initialValue={auth?.user.lname}
+                rules={[
+                  {
+                    required: true,
+                    message: "Please input your lastname!",
+                  },
+                ]}
+              >
+                <Input />
+              </Form.Item>
+
+              <Form.Item
+                label="เบอร์โทรศัพท์"
+                name="phone"
+                initialValue={auth?.user.phone}
+                rules={[
+                  {
+                    required: true,
+                    message: "Please input your phone number!",
+                  },
+                ]}
+              >
+                <Input type="number" minLength={9} maxLength={10} />
+              </Form.Item>
+
+              <Form.Item
+                label="ที่อยู่จัดส่ง"
+                name="address"
+                initialValue={auth?.user.address}
+                rules={[
+                  { required: true, message: "Please input your address!" },
+                ]}
+              >
+                <Input.TextArea />
+              </Form.Item>
+
+              <Form.Item
+                label="รหัสไปรษณีย์"
+                name="postcode"
+                initialValue={auth?.user.postcode}
+                rules={[
+                  { required: true, message: "Please input your postcode!" },
+                ]}
+              >
+                <Input type="number" minLength={5} />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row justify={"center"}>
             {!isChange ? (
               <Button
                 onClick={() => setIsChange(!isChange)}
@@ -125,10 +263,11 @@ const Profile = () => {
                 เปลี่ยนรหัสผ่าน
               </Button>
             )}
+
             <Button type="primary" htmlType="submit">
               บันทึก
             </Button>
-          </Form.Item>
+          </Row>
         </Form>
       </Card>
     </div>

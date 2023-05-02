@@ -15,8 +15,10 @@ export default function cart(state = [], action) {
             console.log('===addItem===')
             return state.concat(action.payload)
          }
+
       case 'removeItem':
          return state = state.filter(item => item.id !== action.payload)
+         
       case 'resetCart':
          return state = []
       default:

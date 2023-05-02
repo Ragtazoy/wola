@@ -8,7 +8,13 @@ const Footer = () => {
       <Row
         justify={"center"}
         align={"middle"}
-        style={{ backgroundColor: "white", textAlign: "center" }}
+        style={{
+          backgroundColor: "white",
+          textAlign: "center",
+          position: "sticky",
+          zIndex: 1,
+          boxShadow: "1px 0 6px rgba(0,0,0,0.1)",
+        }}
       >
         <Col span={6}>
           <p style={{ fontSize: 30, color: "#1890ff" }}>

@@ -1,22 +1,31 @@
 import React, { useState } from "react";
-import { Button, Checkbox, Form, Input, Row, Card, Image } from "antd";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { makeRequest } from "../makeRequest";
 
+import { Button, message, Form, Input, Row, Card, Image, Col } from "antd";
 import { ShoppingTwoTone } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
 import background from "../assets/background.jpg";
 
 const Register = () => {
   const navigate = useNavigate();
   const [error, setError] = useState();
+  const [messageApi, contextHolder] = message.useMessage();
 
-  const onFinish = (values) => {
-    if (handleLogin()) {
-      console.log("handleLogin Success:", values);
-      // navigate("/login", { state: { userId: 1, role: "customer" } });
+  const onFinish = async (values) => {
+    const isRegister = await handleRegister(values);
+    if (isRegister) {
+      console.log("Register Success:");
+      await messageApi.open({
+        type: "success",
+        content: "สมัครสมาชิกสำเร็จ",
+      });
+      navigate("/login");
     } else {
-      console.log("handleLogin Failed");
+      messageApi.open({
+        type: "error",
+        content: "สมัครสมาชิกไม่สำเร็จ",
+      });
+      console.log("Register Failed");
     }
   };
 
@@ -24,24 +33,26 @@ const Register = () => {
     console.log("Failed:", errorInfo);
   };
 
-  const handleLogin = async () => {
-    await makeRequest
-      .post("/auth/local", {
-        identifier: "user1",
-        password: "123456",
+  const handleRegister = (values) => {
+    return makeRequest
+      .post("/auth/local/register", {
+        fname: values.fname,
+        lname: values.lname,
+        username: values.username,
+        email: values.email,
+        password: values.password,
+        phone: values.phone,
+        address: values.address,
+        postcode: values.postcode,
       })
       .then((response) => {
-        // Handle success.
-        console.log("Well done!");
-        console.log("User profile", response.data.user);
-        console.log("User token", response.data.jwt);
-        setError();
+        console.log("Well done!", response.data);
+        setError(false);
         return true;
       })
       .catch((error) => {
-        // Handle error.
         console.log("An error occurred:", error.response);
-        setError("ข้อมูลไม่ถูกต้อง");
+        setError(true);
         return false;
       });
   };
@@ -58,6 +69,8 @@ const Register = () => {
         left: 0,
       }}
     >
+      {contextHolder}
+
       <Image width={"100%"} preview={false} src={background} />
       <div
         style={{
@@ -81,55 +94,117 @@ const Register = () => {
 
           <Form
             name="login"
-            labelCol={{ span: 8 }}
-            wrapperCol={{ span: 16 }}
-            style={{ maxWidth: 600 }}
+            labelCol={{ span: 9 }}
+            wrapperCol={{ span: 15 }}
             initialValues={{ remember: true }}
             onFinish={onFinish}
             onFinishFailed={onFinishFailed}
             autoComplete="off"
           >
-            <Form.Item
-              label="Username"
-              name="username"
-              rules={[
-                { required: true, message: "Please input your username!" },
-              ]}
-            >
-              <Input />
-            </Form.Item>
+            <Row>
+              <Col>
+                <Form.Item
+                  label="ชื่อจริง"
+                  name="fname"
+                  rules={[
+                    { required: true, message: "Please input your firstname!" },
+                  ]}
+                >
+                  <Input />
+                </Form.Item>
 
-            <Form.Item
-              label="Email"
-              name="email"
-              rules={[{ required: true, message: "Please input your email!" }]}
-            >
-              <Input type="email" />
-            </Form.Item>
+                <Form.Item
+                  label="ชื่อผู้ใช้"
+                  name="username"
+                  rules={[
+                    { required: true, message: "Please input your username!" },
+                  ]}
+                >
+                  <Input />
+                </Form.Item>
 
-            <Form.Item
-              label="Password"
-              name="password"
-              rules={[
-                { required: true, message: "Please input your password!" },
-              ]}
-            >
-              <Input.Password />
-            </Form.Item>
+                <Form.Item
+                  label="อีเมล"
+                  name="email"
+                  rules={[
+                    { required: true, message: "Please input your email!" },
+                  ]}
+                >
+                  <Input type="email" />
+                </Form.Item>
 
-            <Form.Item wrapperCol={{ span: 24 }}>
+                <Form.Item
+                  label="รหัสผ่าน"
+                  name="password"
+                  rules={[
+                    { required: true, message: "Please input your password!" },
+                  ]}
+                >
+                  <Input.Password minLength={6} />
+                </Form.Item>
+              </Col>
+
+              <Col>
+                <Form.Item
+                  label="นามสกุล"
+                  name="lname"
+                  rules={[
+                    { required: true, message: "Please input your lastname!" },
+                  ]}
+                >
+                  <Input />
+                </Form.Item>
+
+                <Form.Item
+                  label="เบอร์โทรศัพท์"
+                  name="phone"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please input your phone number!",
+                    },
+                  ]}
+                >
+                  <Input type="number" minLength={9} maxLength={10} />
+                </Form.Item>
+
+                <Form.Item
+                  label="ที่อยู่จัดส่ง"
+                  name="address"
+                  rules={[
+                    { required: true, message: "Please input your address!" },
+                  ]}
+                >
+                  <Input.TextArea />
+                </Form.Item>
+
+                <Form.Item
+                  label="รหัสไปรษณีย์"
+                  name="postcode"
+                  rules={[
+                    { required: true, message: "Please input your postcode!" },
+                  ]}
+                >
+                  <Input type="number" minLength={5} />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Row justify={"center"}>
               {error ? (
                 <span style={{ color: "#ff4d4f", marginBottom: 2 }}>
                   {error}
                 </span>
               ) : null}
-              <Button type="primary" htmlType="submit" block>
+
+              <Button type="primary" htmlType="submit">
                 Register
               </Button>
-            </Form.Item>
+            </Row>
           </Form>
+
           <span>
-            ยังไม่มีบัญชี?<Link to={"/login"}> สมัครสมาชิก</Link>
+            มีบัญชีอยู่แล้ว?<Link to={"/login"}> เข้าสู่ระบบ</Link>
           </span>
         </Card>
       </div>

@@ -1,17 +1,41 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import React, { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+import { useSearchParams } from "react-router-dom";
 
-import { Row, Col, List, Button, Space, Card, Form, Input } from "antd";
-import { DeleteOutlined } from "@ant-design/icons";
-
-const { TextArea } = Input;
+import { Row, Col, Steps } from "antd";
+import Ordering from "../../components/Ordering";
+import Payment from "../../components/Payment";
+import PaySuccess from "../../components/PaySuccess";
 
 const Order = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const selectedProducts = useSelector((state) => state.cart);
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
-  console.log("selectedProducts:", selectedProducts);
+  const [current, setCurrent] = useState(0);
+//   const [stripeId, setStripeId] = useState();
+
+  useEffect(() => {
+    const success = searchParams.get("success");
+    if (success === "true") {
+      // const stripeId = searchParams.get("stripe_id");
+      // setStripeId(stripeId);
+      setCurrent(2);
+    }
+  }, [searchParams]);
+
+  const onSubmit = (data) => {
+    setCurrent(current + data);
+  };
+
+  const steps = [
+    { key: 1, title: "สั่งซื้อ", content: <Ordering onSubmit={onSubmit} /> },
+    { key: 2, title: "ชำระเงิน", content: <Payment onSubmit={onSubmit} /> },
+    {
+      key: 3,
+      title: "สำเร็จ",
+      content: <PaySuccess />,
+      disabled: true,
+    },
+  ];
 
   const totalPrice = () => {
     let total = 0;
@@ -21,111 +45,27 @@ const Order = () => {
     return total.toString();
   };
 
-  const handleOrder = () => {
-    navigate("/delivery");
-  };
-
   return (
-    <Row
-      gutter={20}
-      justify={"center"}
+    <Col
       style={{
         backgroundColor: "#f7fafc",
         padding: 20,
         margin: 0,
-        minHeight: 780,
+        minHeight: 798,
       }}
     >
-      <Col span={16}>
-        <h1>รายการสินค้า</h1>
-        <Card>
-          <List
-            style={{ width: "100%" }}
-            itemLayout="vertical"
-            size="large"
-            dataSource={selectedProducts}
-            renderItem={(item, index) => (
-              <List.Item
-                extra={
-                  <Space direction="vertical" size="middle">
-                    <Row justify={"end"}>
-                      <span style={{ fontSize: 16 }}>
-                        {item.price * item.quantity + " บาท"}
-                      </span>
-                    </Row>
-                    <Row justify={"end"}>
-                      <Button
-                        onClick={() => {
-                          dispatch({ type: "removeItem", payload: item.id });
-                        }}
-                        name="delete"
-                        type="primary"
-                        danger
-                        icon={<DeleteOutlined />}
-                        size={"small"}
-                      />
-                    </Row>
-                  </Space>
-                }
-              >
-                <List.Item.Meta
-                  avatar={
-                    <img
-                      width={80}
-                      height={70}
-                      alt="cart"
-                      src={process.env.REACT_APP_UPLOAD_URL + item.image}
-                    />
-                  }
-                  title={item.product_name}
-                  description={"จำนวน " + item.quantity}
-                />
-              </List.Item>
-            )}
-          />
-        </Card>
-      </Col>
+      <Row style={{ padding: "20px 100px" }}>
+        <Steps
+          items={steps}
+          current={current}
+          onChange={(value) => setCurrent(value)}
+        />
+      </Row>
 
-      <Col span={6}>
-        <h1>รายละเอียด</h1>
-        <Card style={{ marginBottom: 20 }}>
-          <span style={{ fontSize: 20 }}>ที่อยู่การจัดส่ง</span>
-          <Form.Item style={{ margin: "10px 0 10px 0" }}>
-            <TextArea
-              disabled
-              rows={4}
-              defaultValue={"12/24 555 5555"}
-              style={{ color: "rgba(0, 0, 0, 0.8)" }}
-            />
-          </Form.Item>
-          <span style={{ fontSize: 20 }}>เบอร์ติดต่อ</span>
-          <Form.Item style={{ margin: "10px 0 0 0" }}>
-            <Input
-              disabled
-              rows={4}
-              defaultValue={"055 555 5555"}
-              style={{ color: "rgba(0, 0, 0, 0.8)" }}
-            />
-          </Form.Item>
-        </Card>
-        <Card>
-          <Row justify={"space-between"} style={{ marginBottom: 10 }}>
-            <span style={{ fontSize: 20 }}>ราคารวม</span>
-            <span style={{ fontSize: 20 }}>{totalPrice()} บาท</span>
-          </Row>
-          <Button
-            onClick={() => {
-              handleOrder();
-            }}
-            type="primary"
-            block
-            size={"large"}
-          >
-            สั่งซื้อ
-          </Button>
-        </Card>
-      </Col>
-    </Row>
+      <Row gutter={20} justify={"center"}>
+        {steps[current].content}
+      </Row>
+    </Col>
   );
 };
 

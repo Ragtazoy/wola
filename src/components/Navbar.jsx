@@ -41,7 +41,7 @@ const Navbar = () => {
         paddingInline: 40,
         height: 70,
         backgroundColor: "white",
-        boxShadow: "0 1px 6px grey",
+        boxShadow: "0 1px 6px rgba(0,0,0,0.1)",
       }}
     >
       <Col span={12}>
@@ -57,9 +57,10 @@ const Navbar = () => {
           <Anchor
             direction="horizontal"
             items={[
+              { key: "home", href: "/", title: "Home" },
               { key: "product", href: "/#product", title: "Product" },
               { key: "delivery", href: "/delivery", title: "Delivery" },
-              { key: "review", href: "/#review", title: "Review" },
+            //   { key: "review", href: "/#review", title: "Review" },
             ]}
           />
         </Row>
