@@ -23,7 +23,6 @@ const Delivery = () => {
     }
 
     fetchData();
-    console.log(order);
   }, []);
 
   useEffect(() => {
@@ -48,7 +47,7 @@ const Delivery = () => {
       setCancel(statusCancel);
     }
 
-    if (order.length > 0) {
+    if (order !== undefined) {
       fetchData();
     }
   }, [order]);
@@ -62,7 +61,7 @@ const Delivery = () => {
           ? success
           : cancel
         ).map((item, index) => (
-          <>
+          <div key={index}>
             <h3>
               {moment(item.createdAt).format(
                 "สั่งซื้อวันที่ DD/MM/YYYY เวลา HH:MM น."
@@ -110,47 +109,8 @@ const Delivery = () => {
                 </List.Item>
               )}
             />
-          </>
+          </div>
         ))}
-        {/* {console.log(delivery)}
-        {delivery.map((item) => (
-          <>
-            <List
-              style={{ width: "100%" }}
-              itemLayout="vertical"
-              size="large"
-              key={item.id}
-              dataSource={item.products}
-              renderItem={(product, index) => (
-                <List.Item
-                  extra={
-                    <Space direction="vertical" size="middle">
-                      <Row justify={"end"}>
-                        <span style={{ fontSize: 16 }}>{" บาท"}</span>
-                      </Row>
-                      <Row justify={"end"}>
-                        <span style={{ color: "#FF9017" }}>กำลังจัดส่ง</span>
-                      </Row>
-                    </Space>
-                  }
-                >
-                  <List.Item.Meta
-                    avatar={
-                      <img
-                        width={80}
-                        height={70}
-                        alt="cart"
-                        src={process.env.REACT_APP_UPLOAD_URL + "item.image"}
-                      />
-                    }
-                    title={product.product_name}
-                    description={"จำนวน item.quantity"}
-                  />
-                </List.Item>
-              )}
-            />
-          </>
-        ))} */}
       </Card>
     );
   };

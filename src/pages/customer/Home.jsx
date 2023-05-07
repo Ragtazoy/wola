@@ -195,8 +195,17 @@ const Home = () => {
               : productJuices.map((item) => (
                   <Card
                     key={item.id}
-                    onClick={() => {
-                      console.log("hello cards");
+                    onClick={async () => {
+                      await dispatch({
+                        type: "addItem",
+                        payload: {
+                          id: item.id,
+                          product_name: item.attributes.product_name,
+                          price: item.attributes.price,
+                          image: item.attributes.image.data.attributes.url,
+                          quantity: 1,
+                        },
+                      });
                     }}
                     hoverable
                     bordered={false}

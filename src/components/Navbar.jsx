@@ -59,8 +59,7 @@ const Navbar = () => {
             items={[
               { key: "home", href: "/", title: "Home" },
               { key: "product", href: "/#product", title: "Product" },
-              { key: "delivery", href: "/delivery", title: "Delivery" },
-            //   { key: "review", href: "/#review", title: "Review" },
+              { key: "delivery", href: "/delivery", title: "Delivery"},
             ]}
           />
         </Row>
