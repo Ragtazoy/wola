@@ -1,0 +1,4 @@
+[submodule "wola-api"]
+	path = wola-api
+	url = https://github.com/Ragtazoy/wola-api.git
+	branch = main
